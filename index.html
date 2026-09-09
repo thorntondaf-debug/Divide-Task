@@ -2,8 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Slatted Fence Spacing Calculator</title>
+
+  <!-- PWA / full-screen app support -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Fence Calc">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" href="icon-192.png">
   <style>
     :root {
       --bg: #0f172a;
@@ -31,7 +41,12 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      min-height: 100dvh;
       padding: 20px;
+      padding-top: max(20px, env(safe-area-inset-top));
+      padding-bottom: max(20px, env(safe-area-inset-bottom));
+      padding-left: max(20px, env(safe-area-inset-left));
+      padding-right: max(20px, env(safe-area-inset-right));
     }
 
     .calculator-card {
@@ -200,6 +215,26 @@
     td {
       color: var(--text);
     }
+
+    .warning-banner {
+      display: none;
+      background-color: #7c2d12;
+      border: 1px solid var(--accent-orange);
+      color: #fed7aa;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+    }
+
+    .warning-banner.visible {
+      display: block;
+    }
+
+    @media (max-width: 420px) {
+      .row { flex-direction: column; gap: 10px; }
+      .counter-btn { width: 40px; height: 40px; }
+    }
   </style>
 </head>
 <body>
@@ -207,6 +242,8 @@
   <div class="calculator-card">
     <h1>Slatted Fence Spacing Calculator</h1>
     <p class="subtitle">Calculate slat counts, uniform gap widths, and running tape measure marks.</p>
+
+    <div class="warning-banner" id="warningBanner"></div>
 
     <div class="row">
       <div class="form-group">
@@ -323,8 +360,19 @@
 
     const btnInc = document.getElementById('btnInc');
     const btnDec = document.getElementById('btnDec');
+    const warningBanner = document.getElementById('warningBanner');
 
     let manualSlatCount = null;
+
+    function showWarning(msg) {
+      if (!msg) {
+        warningBanner.classList.remove('visible');
+        warningBanner.textContent = '';
+        return;
+      }
+      warningBanner.textContent = msg;
+      warningBanner.classList.add('visible');
+    }
 
     function calculate(isManualAdjust = false) {
       const unit = unitSelect.value;
@@ -333,7 +381,14 @@
       const G_target = parseFloat(targetGapInput.value) || 0;
       const mode = endModeSelect.value;
 
-      if (L <= 0 || W <= 0) return;
+      if (L <= 0 || W <= 0) {
+        showWarning('Enter a total span and slat width greater than zero.');
+        return;
+      }
+      if (W + G_target <= 0) {
+        showWarning('Slat width plus target gap must be greater than zero.');
+        return;
+      }
 
       let N = 0;
       let startOffset = 0;
@@ -349,6 +404,11 @@
         effLength = L - leftS - rightS;
       } else {
         customSetbackRow.style.display = 'none';
+      }
+
+      if (effLength <= 0) {
+        showWarning('Setbacks leave no usable span. Reduce the start/end setback.');
+        return;
       }
 
       // Determine Slat Count N
@@ -378,6 +438,12 @@
       } else if (mode === 'halfGap') {
         G_exact = (effLength - (N * W)) / (N + 1);
         startOffset = G_exact;
+      }
+
+      if (G_exact < 0) {
+        showWarning(`${N} slats don't fit in the available span — reduce the slat count or width.`);
+      } else {
+        showWarning(null);
       }
 
       slatCountVal.textContent = N;
@@ -443,6 +509,13 @@
     });
 
     calculate();
+
+    // Register service worker for offline / full-screen app use
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
   </script>
 </body>
 </html>
