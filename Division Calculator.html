@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slatted Fence Spacing Calculator</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --accent-green: #34d399;
+      --accent-orange: #fb923c;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --input-bg: #0f172a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .calculator-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      max-width: 680px;
+      width: 100%;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-bottom: 24px;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .form-group {
+      flex: 1;
+    }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px 14px;
+      background-color: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+    }
+
+    .divider {
+      border-top: 1px dashed var(--border);
+      margin: 20px 0;
+    }
+
+    .results {
+      background-color: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .result-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .result-item:last-child {
+      border-bottom: none;
+    }
+
+    .result-label {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .result-value {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .result-value.highlight {
+      color: var(--accent-green);
+    }
+
+    .counter-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .counter-btn {
+      background-color: var(--border);
+      color: var(--text);
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .counter-btn:hover {
+      background-color: var(--accent);
+      color: #000;
+    }
+
+    .svg-container {
+      margin-top: 20px;
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+    }
+
+    svg {
+      width: 100%;
+      height: 120px;
+    }
+
+    .table-container {
+      margin-top: 20px;
+      max-height: 220px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background-color: var(--input-bg);
+      color: var(--text-muted);
+      position: sticky;
+      top: 0;
+    }
+
+    td {
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="calculator-card">
+    <h1>Slatted Fence Spacing Calculator</h1>
+    <p class="subtitle">Calculate slat counts, uniform gap widths, and running tape measure marks.</p>
+
+    <div class="row">
+      <div class="form-group">
+        <label for="unitSelect">Unit</label>
+        <select id="unitSelect">
+          <option value="mm">mm</option>
+          <option value="cm">cm</option>
+          <option value="in">in</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="totalLength">Total Opening Span</label>
+        <input type="number" id="totalLength" value="2400" step="any" min="0">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="form-group">
+        <label for="slatWidth">Slat Width</label>
+        <input type="number" id="slatWidth" value="70" step="any" min="0">
+      </div>
+      <div class="form-group">
+        <label for="targetGap">Target Gap</label>
+        <input type="number" id="targetGap" value="15" step="any" min="0">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="form-group">
+        <label for="endMode">First & Last Slat Placement</label>
+        <select id="endMode">
+          <option value="flush">Flush against Posts (First & Last Slat on End)</option>
+          <option value="halfGap">Equal Gap at Ends (Gap against Posts)</option>
+          <option value="custom">Custom Setback from Ends</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row" id="customSetbackRow" style="display: none;">
+      <div class="form-group">
+        <label for="leftSetback">Start Setback (Left)</label>
+        <input type="number" id="leftSetback" value="10" step="any" min="0">
+      </div>
+      <div class="form-group">
+        <label for="rightSetback">End Setback (Right)</label>
+        <input type="number" id="rightSetback" value="10" step="any" min="0">
+      </div>
+    </div>
+
+    <div class="results">
+      <div class="result-item">
+        <span class="result-label">Total Slats Required</span>
+        <div class="counter-control">
+          <button class="counter-btn" id="btnDec">-</button>
+          <span class="result-value highlight" id="slatCountVal">28</span>
+          <button class="counter-btn" id="btnInc">+</button>
+        </div>
+      </div>
+      <div class="result-item">
+        <span class="result-label">Exact Calculated Gap</span>
+        <span class="result-value highlight" id="exactGapVal">16.30 mm</span>
+      </div>
+      <div class="result-item">
+        <span class="result-label">First Slat Start Offset</span>
+        <span class="result-value" id="firstSlatStart">0.00 mm</span>
+      </div>
+      <div class="result-item">
+        <span class="result-label">Last Slat End Offset</span>
+        <span class="result-value" id="lastSlatEnd">2400.00 mm</span>
+      </div>
+    </div>
+
+    <div class="svg-container">
+      <svg id="fenceSvg" viewBox="0 0 600 100">
+        <!-- Fence preview rendered dynamically -->
+      </svg>
+    </div>
+
+    <div class="divider"></div>
+    <p class="subtitle" style="margin-bottom: 10px;">Running Tape Marking Table (Measure from Start Point)</p>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Slat #</th>
+            <th>Start (Leading Edge)</th>
+            <th>Centerline</th>
+            <th>End (Trailing Edge)</th>
+          </tr>
+        </thead>
+        <tbody id="markTableBody">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const totalLengthInput = document.getElementById('totalLength');
+    const slatWidthInput = document.getElementById('slatWidth');
+    const targetGapInput = document.getElementById('targetGap');
+    const endModeSelect = document.getElementById('endMode');
+    const unitSelect = document.getElementById('unitSelect');
+    const leftSetbackInput = document.getElementById('leftSetback');
+    const rightSetbackInput = document.getElementById('rightSetback');
+    const customSetbackRow = document.getElementById('customSetbackRow');
+
+    const slatCountVal = document.getElementById('slatCountVal');
+    const exactGapVal = document.getElementById('exactGapVal');
+    const firstSlatStart = document.getElementById('firstSlatStart');
+    const lastSlatEnd = document.getElementById('lastSlatEnd');
+    const fenceSvg = document.getElementById('fenceSvg');
+    const markTableBody = document.getElementById('markTableBody');
+
+    const btnInc = document.getElementById('btnInc');
+    const btnDec = document.getElementById('btnDec');
+
+    let manualSlatCount = null;
+
+    function calculate(isManualAdjust = false) {
+      const unit = unitSelect.value;
+      const L = parseFloat(totalLengthInput.value) || 0;
+      const W = parseFloat(slatWidthInput.value) || 0;
+      const G_target = parseFloat(targetGapInput.value) || 0;
+      const mode = endModeSelect.value;
+
+      if (L <= 0 || W <= 0) return;
+
+      let N = 0;
+      let startOffset = 0;
+      let endOffset = L;
+      let effLength = L;
+
+      if (mode === 'custom') {
+        customSetbackRow.style.display = 'flex';
+        const leftS = parseFloat(leftSetbackInput.value) || 0;
+        const rightS = parseFloat(rightSetbackInput.value) || 0;
+        startOffset = leftS;
+        endOffset = L - rightS;
+        effLength = L - leftS - rightS;
+      } else {
+        customSetbackRow.style.display = 'none';
+      }
+
+      // Determine Slat Count N
+      if (!isManualAdjust || manualSlatCount === null) {
+        if (mode === 'flush' || mode === 'custom') {
+          // N slats, N-1 gaps inside
+          N = Math.round((effLength + G_target) / (W + G_target));
+        } else if (mode === 'halfGap') {
+          // N slats, N+1 gaps
+          N = Math.round((effLength - G_target) / (W + G_target));
+        }
+        if (N < 1) N = 1;
+        manualSlatCount = N;
+      } else {
+        N = manualSlatCount;
+      }
+
+      // Calculate exact gap G
+      let G_exact = 0;
+      if (mode === 'flush' || mode === 'custom') {
+        if (N > 1) {
+          G_exact = (effLength - (N * W)) / (N - 1);
+        } else {
+          G_exact = 0;
+          startOffset = startOffset + (effLength - W) / 2;
+        }
+      } else if (mode === 'halfGap') {
+        G_exact = (effLength - (N * W)) / (N + 1);
+        startOffset = G_exact;
+      }
+
+      slatCountVal.textContent = N;
+      exactGapVal.textContent = `${G_exact.toFixed(2)} ${unit}`;
+      firstSlatStart.textContent = `${startOffset.toFixed(2)} ${unit}`;
+      lastSlatEnd.textContent = `${(startOffset + (N - 1) * (W + G_exact) + W).toFixed(2)} ${unit}`;
+
+      // Build SVG Drawing
+      let svgHtml = `
+        <!-- Posts / End Boundaries -->
+        <rect x="0" y="10" width="12" height="80" fill="#475569" rx="2"/>
+        <rect x="588" y="10" width="12" height="80" fill="#475569" rx="2"/>
+      `;
+
+      const drawWidth = 576; // 600 - 24 for posts
+      const scale = drawWidth / L;
+
+      markTableBody.innerHTML = '';
+
+      for (let i = 0; i < N; i++) {
+        const slatStartPos = startOffset + i * (W + G_exact);
+        const slatCenterPos = slatStartPos + (W / 2);
+        const slatEndPos = slatStartPos + W;
+
+        // Render SVG Slat
+        const xSvg = 12 + (slatStartPos * scale);
+        const wSvg = Math.max(1, W * scale);
+        svgHtml += `<rect x="${xSvg}" y="20" width="${wSvg}" height="60" fill="#38bdf8" rx="1.5" stroke="#0284c7" stroke-width="0.5"/>`;
+
+        // Render Table Row
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>Slat ${i + 1}</td>
+          <td>${slatStartPos.toFixed(1)} ${unit}</td>
+          <td>${slatCenterPos.toFixed(1)} ${unit}</td>
+          <td>${slatEndPos.toFixed(1)} ${unit}</td>
+        `;
+        markTableBody.appendChild(tr);
+      }
+
+      fenceSvg.innerHTML = svgHtml;
+    }
+
+    // Handlers
+    totalLengthInput.addEventListener('input', () => { manualSlatCount = null; calculate(); });
+    slatWidthInput.addEventListener('input', () => { manualSlatCount = null; calculate(); });
+    targetGapInput.addEventListener('input', () => { manualSlatCount = null; calculate(); });
+    endModeSelect.addEventListener('change', () => { manualSlatCount = null; calculate(); });
+    unitSelect.addEventListener('change', calculate);
+    leftSetbackInput.addEventListener('input', () => { manualSlatCount = null; calculate(); });
+    rightSetbackInput.addEventListener('input', () => { manualSlatCount = null; calculate(); });
+
+    btnInc.addEventListener('click', () => {
+      manualSlatCount = (manualSlatCount || 1) + 1;
+      calculate(true);
+    });
+
+    btnDec.addEventListener('click', () => {
+      if ((manualSlatCount || 1) > 1) {
+        manualSlatCount = manualSlatCount - 1;
+        calculate(true);
+      }
+    });
+
+    calculate();
+  </script>
+</body>
+</html>
